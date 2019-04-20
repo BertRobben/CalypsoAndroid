@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,11 +12,15 @@ import bert.calypso.crawler.Game;
 import bert.calypso.crawler.GamesExtractor;
 import bert.calypso.crawler.LocatedGame;
 import bert.calypso.crawler.ProgressPublisher;
+import bert.calypso.crawler.Reservation;
+import bert.calypso.crawler.ReservationsExtractor;
+import bert.calypso.crawler.ReservationsExtractor.ReservationExtractor;
 
 public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<LocatedGame>>> {
 
     private static final String TAG = "Gameoverview";
 
+    private final ReservationsExtractor reservationsExtractor;
     private MainActivity currentActivity;
     private boolean done;
 
@@ -27,9 +32,17 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
                 publishProgress(message);
             }
         });
+        ReservationsExtractor reservationsExtractor = new ReservationsExtractor(new ProgressPublisher() {
+            @Override
+            public void publish(String message) {
+                publishProgress(message);
+            }
+        });
+
         try {
+            ReservationExtractor reservationExtractor = reservationsExtractor.createReservationExtractor();
             List<Game> games = ge.crawl();
-            List<LocatedGame> locatedGames = locate(games);
+            List<LocatedGame> locatedGames = locate(games, reservationExtractor);
             return new TaskResult<>(locatedGames);
         } catch (Exception e) {
             Log.e(TAG, "Failed to extract games", e);
@@ -37,12 +50,28 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
         }
     }
 
-    private List<LocatedGame> locate(List<Game> games) {
+    private List<LocatedGame> locate(List<Game> games, ReservationExtractor reservationExtractor) {
         List<LocatedGame> result = new ArrayList<>();
         for (Game game : games) {
-            result.add(new LocatedGame(game));
+            result.add(new LocatedGame(game, findLocation(game, reservationExtractor)));
         }
         return result;
+    }
+
+    private String findLocation(Game game, ReservationExtractor reservationExtractor) {
+        if (!game.isHomeGame() || game.getDate() == null) {
+            return "";
+        }
+        try {
+            List<Reservation> reservations = reservationExtractor.getReservations(game.getDate());
+            if (!reservations.isEmpty()) {
+                return reservations.get(0).getHall();
+            }
+            return "";
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to extract date", e);
+            publishProgress("Failed to extract reservation (" + e.getMessage() + ")");
+        }
     }
 
     @Override

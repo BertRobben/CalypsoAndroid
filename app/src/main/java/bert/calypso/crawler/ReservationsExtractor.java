@@ -22,7 +22,7 @@ public class ReservationsExtractor {
 
     private final ProgressPublisher publisher;
 
-    interface ReservationExtractor {
+    public interface ReservationExtractor {
         List<Reservation> getReservations(Date date) throws IOException;
     }
 
@@ -90,61 +90,6 @@ public class ReservationsExtractor {
             }
         };
     }
-
-//    public Reservations crawl() throws IOException {
-//
-//        Map<String, String> cookies = new HashMap<>();
-//        publisher.publish("Connecting to sport.leuven.be");
-//        Response response = Jsoup.connect("https://sport.leuven.be/").method(Connection.Method.GET)
-//                .execute();
-//        // this starts a new php session and gives us 2 cookies
-//        cookies.putAll(response.cookies());
-//        Document doc = response.parse();
-//
-//        String clubs = HtmlHelper.findLink(doc, "Clubs");
-//        publisher.publish("Connecting to " + clubs);
-//
-//        response = Jsoup.connect(clubs).method(Connection.Method.GET)
-//                .cookies(cookies)
-//                .referrer(response.url().toString())
-//                .execute();
-//
-//        // javascript sets window.location to club_login.php?soort=log
-//        response = Jsoup.connect("https://sport.leuven.be/club_login.php?soort=log").method(Connection.Method.GET)
-//                .cookies(cookies)
-//                .referrer(response.url().toString())
-//                .execute();
-//
-//        publisher.publish("Logging in");
-//
-//        response = Jsoup.connect("https://sport.leuven.be/club_login.php?soort=log").method(Connection.Method.POST)
-//                .cookies(cookies)
-//                .header("Content-Type", "application/x-www-form-urlencoded")
-//                .referrer(response.url().toString())
-//                .data("gn", "238") // account name Calypso
-//                .data("pw1", "TZTOJP")
-//                .data("aanloggen", "Aanloggen")
-//                .execute();
-//
-//        publisher.publish("Getting data");
-//        response = Jsoup.connect("https://sport.leuven.be/clubs_mod.php").method(Connection.Method.GET)
-//                .cookies(cookies)
-//                .referrer(response.url().toString())
-//                .execute();
-//
-//        publisher.publish("Going to calendar");
-//        response = Jsoup.connect("https://sport.leuven.be/index.php").method(Connection.Method.GET)
-//                .cookies(cookies)
-//                .referrer("https://sport.leuven.be/clubs_mod.php")
-//                .execute();
-//
-//        doc = response.parse();
-//
-//        List<Reservation> reservations = new ArrayList<>();
-//        reservations.addAll(getReservations(response.url().toString(), doc, cookies, date, "SPORTCOMPLEX KESSEL-LO"));
-//        reservations.addAll(getReservations(response.url().toString(), doc, cookies, date, "KORBEEK-LO SPORTHAL"));
-//        return new Reservations(reservations);
-//    }
 
     private List<Reservation> getReservations(String url, Document doc, Map<String, String> cookies, Date date, String hall) throws IOException {
         String accomodatie = HtmlHelper.findOption(doc, "accomodaties", hall);
