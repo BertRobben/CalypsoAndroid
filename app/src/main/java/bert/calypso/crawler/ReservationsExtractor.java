@@ -1,6 +1,7 @@
 package bert.calypso.crawler;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -96,7 +97,7 @@ public class ReservationsExtractor {
         publisher.publish("Getting halls for " + hall);
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
-        String dayOfMonth = Integer.toString(Calendar.DAY_OF_MONTH);
+        String dayOfMonth = Integer.toString(cal.get(Calendar.DAY_OF_MONTH));
         String monthOfYear = Integer.toString(cal.get(Calendar.MONTH) + 1);
         String year = Integer.toString(cal.get(Calendar.YEAR));
         Response response = Jsoup.connect(url)
@@ -110,7 +111,7 @@ public class ReservationsExtractor {
                 .execute();
 
         String zaal = HtmlHelper.findOption(response.parse(), "zalen", "SPORTHAL");
-        publisher.publish("Getting reservation data");
+        publisher.publish("Getting reservation data for " + dayOfMonth + "/" + monthOfYear + " (" + hall + ")" );
 
         response = Jsoup.connect(response.url().toString())
                 .cookies(cookies)
@@ -122,10 +123,12 @@ public class ReservationsExtractor {
                 .method(Connection.Method.POST)
                 .execute();
 
-        return findReservations(response.parse(), hall);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM");
+        String formattedDate = sdf.format(date);
+        return findReservations(response.parse(), hall, formattedDate);
     }
 
-    private List<Reservation> findReservations(Document document, String sportComplex) {
+    private List<Reservation> findReservations(Document document, String sportComplex, String formattedDate) {
         List<Reservation> result = new ArrayList<>();
         Reservation current = null;
         for (Element table : document.select("table[class=box]")) {
@@ -138,6 +141,9 @@ public class ReservationsExtractor {
                 } else {
                     hours.add(th.text());
                 }
+            }
+            if (date == null || !date.endsWith(formattedDate)) {
+                continue;
             }
             for (int j = 1; j < trs.size(); j++) {
                 Elements tds = trs.get(j).select("td");

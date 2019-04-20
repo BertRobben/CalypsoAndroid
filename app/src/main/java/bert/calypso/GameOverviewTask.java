@@ -20,7 +20,6 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
 
     private static final String TAG = "Gameoverview";
 
-    private final ReservationsExtractor reservationsExtractor;
     private MainActivity currentActivity;
     private boolean done;
 
@@ -67,11 +66,11 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
             if (!reservations.isEmpty()) {
                 return reservations.get(0).getHall();
             }
-            return "";
         } catch (IOException e) {
             Log.e(TAG, "Failed to extract date", e);
             publishProgress("Failed to extract reservation (" + e.getMessage() + ")");
         }
+        return "";
     }
 
     @Override
@@ -85,6 +84,7 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
     @Override
     protected void onPostExecute(TaskResult<List<LocatedGame>> r) {
         done = true;
+        onProgressUpdate("");
         if (currentActivity != null) {
             if (r.getResult() != null) {
                 currentActivity.showGames(r.getResult());
