@@ -18,7 +18,7 @@ import org.jsoup.select.Elements;
 import bert.calypso.SimpleTime;
 
 
-public class LocationExtractor {
+public class ReservationsExtractor {
 
     private final ProgressPublisher publisher;
 
@@ -26,19 +26,18 @@ public class LocationExtractor {
         List<Reservation> getReservations(Date date) throws IOException;
     }
 
-    public LocationExtractor(ProgressPublisher publisher) {
+    public ReservationsExtractor(ProgressPublisher publisher) {
         this.publisher = publisher;
         HtmlHelper.disableSSLCertificateChecking();
     }
 
     public ReservationExtractor createReservationExtractor() throws IOException {
 
-        final Map<String, String> cookies = new HashMap<>();
         publisher.publish("Connecting to sport.leuven.be");
         Response response = Jsoup.connect("https://sport.leuven.be/").method(Connection.Method.GET)
                 .execute();
         // this starts a new php session and gives us 2 cookies
-        cookies.putAll(response.cookies());
+        final Map<String, String> cookies = new HashMap<>(response.cookies());
         Document doc = response.parse();
 
         String clubs = HtmlHelper.findLink(doc, "Clubs");
@@ -67,7 +66,7 @@ public class LocationExtractor {
                 .execute();
 
         publisher.publish("Getting data");
-        response = Jsoup.connect("https://sport.leuven.be/clubs_mod.php").method(Connection.Method.GET)
+        Jsoup.connect("https://sport.leuven.be/clubs_mod.php").method(Connection.Method.GET)
                 .cookies(cookies)
                 .referrer(response.url().toString())
                 .execute();
@@ -85,8 +84,8 @@ public class LocationExtractor {
             @Override
             public List<Reservation> getReservations(Date date) throws IOException {
                 List<Reservation> reservations = new ArrayList<>();
-                reservations.addAll(LocationExtractor.this.getReservations(reservationsUrl, calendarDoc, cookies, date, "SPORTCOMPLEX KESSEL-LO"));
-                reservations.addAll(LocationExtractor.this.getReservations(reservationsUrl, calendarDoc, cookies, date, "KORBEEK-LO SPORTHAL"));
+                reservations.addAll(ReservationsExtractor.this.getReservations(reservationsUrl, calendarDoc, cookies, date, "SPORTCOMPLEX KESSEL-LO"));
+                reservations.addAll(ReservationsExtractor.this.getReservations(reservationsUrl, calendarDoc, cookies, date, "KORBEEK-LO SPORTHAL"));
                 return reservations;
             }
         };

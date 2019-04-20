@@ -24,7 +24,7 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LinearLayout layout = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.reservation_layout, parent, false);
+                .inflate(R.layout.game_layout, parent, false);
         return new MyViewHolder(layout);
     }
 
@@ -46,8 +46,8 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
         public TextView period;
         public MyViewHolder(LinearLayout v) {
             super(v);
-            hall = v.findViewById(R.id.hall);
-            period = v.findViewById(R.id.period);
+            hall = v.findViewById(R.id.date);
+            period = v.findViewById(R.id.hall);
         }
     }
 }

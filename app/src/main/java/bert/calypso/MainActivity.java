@@ -1,20 +1,23 @@
 package bert.calypso;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 
-import bert.calypso.crawler.Reservations;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class MainActivity extends Activity {
+import java.util.List;
+
+import bert.calypso.crawler.LocatedGame;
+
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    public static final String RESERVATIONS = "bert.calypso.reservations";
-
-    private LocationExtractorTask locationExtractorTask;
+    private GameOverviewTask gameOverviewTask;
+    private RecyclerView gamesView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,39 +25,47 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        locationExtractorTask = (LocationExtractorTask) getLastNonConfigurationInstance();
-        if (locationExtractorTask != null) {
-            locationExtractorTask.attach(this);
+        gamesView = findViewById(R.id.gamesView);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        gamesView.setHasFixedSize(true);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        gamesView.setLayoutManager(layoutManager);
+
+        gameOverviewTask = (GameOverviewTask) getLastCustomNonConfigurationInstance();
+        if (gameOverviewTask != null) {
+            gameOverviewTask.attach(this);
         }
+        go();
     }
 
-    public void go(View view) {
-//        if (locationExtractorTask != null && locationExtractorTask.isDone()) {
-//            locationExtractorTask.detach();
-//            locationExtractorTask = null;
-//        }
+    private void go() {
         Log.i(TAG, "go");
-        if (locationExtractorTask == null) {
-            locationExtractorTask = new LocationExtractorTask();
-            locationExtractorTask.attach(this);
-            locationExtractorTask.execute();
+        if (gameOverviewTask != null && gameOverviewTask.isDone()) {
+            gameOverviewTask.detach();
+            gameOverviewTask = null;
+        }
+        if (gameOverviewTask == null) {
+            gameOverviewTask = new GameOverviewTask();
+            gameOverviewTask.attach(this);
+            gameOverviewTask.execute();
         }
     }
 
-    public void showReservations(Reservations reservations) {
-        Log.i(TAG, "showReservations");
-        Intent intent = new Intent(this, ShowReservationsActivity.class);
-        intent.putExtra(RESERVATIONS, reservations);
-        startActivity(intent);
+    public void showGames(List<LocatedGame> games) {
+        Log.i(TAG, "showGames");
+        gamesView.setAdapter(new GamesAdapter(games));
     }
 
     @Override
-    public Object onRetainNonConfigurationInstance() {
-        Log.i(TAG, "RetainNonConfigurationInstance");
-        if (locationExtractorTask != null) {
-            locationExtractorTask.detach();
+    public Object onRetainCustomNonConfigurationInstance() {
+        Log.i(TAG, "onRetainCustomNonConfigurationInstance");
+        if (gameOverviewTask != null) {
+            gameOverviewTask.detach();
         }
-        return locationExtractorTask;
+        return gameOverviewTask;
     }
 
 }

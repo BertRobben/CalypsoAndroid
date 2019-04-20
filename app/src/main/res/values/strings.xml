@@ -3,4 +3,5 @@
     <string name="go_message">Go</string>
     <string name="enter_code_message">Enter code</string>
     <string name="reserved_halls">Gereserveerde zalen</string>
+    <string name="upcoming_games">Upcoming games</string>
 </resources>

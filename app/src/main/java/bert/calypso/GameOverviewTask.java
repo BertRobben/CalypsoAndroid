@@ -1,22 +1,23 @@
 package bert.calypso;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import bert.calypso.crawler.Game;
 import bert.calypso.crawler.GamesExtractor;
 import bert.calypso.crawler.LocatedGame;
-import bert.calypso.crawler.LocationExtractor;
 import bert.calypso.crawler.ProgressPublisher;
-import bert.calypso.crawler.Reservations;
 
 public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<LocatedGame>>> {
 
+    private static final String TAG = "Gameoverview";
+
     private MainActivity currentActivity;
+    private boolean done;
 
     @Override
     protected TaskResult<List<LocatedGame>> doInBackground(Void... params) {
@@ -30,7 +31,8 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
             List<Game> games = ge.crawl();
             List<LocatedGame> locatedGames = locate(games);
             return new TaskResult<>(locatedGames);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to extract games", e);
             return new TaskResult(e);
         }
     }
@@ -53,6 +55,7 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
 
     @Override
     protected void onPostExecute(TaskResult<List<LocatedGame>> r) {
+        done = true;
         if (currentActivity != null) {
             if (r.getResult() != null) {
                 currentActivity.showGames(r.getResult());
@@ -61,6 +64,10 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
                 tv.setText("Failed to extract results: " + r.getException().getMessage());
             }
         }
+    }
+
+    public boolean isDone() {
+        return done;
     }
 
     void attach(MainActivity a) {

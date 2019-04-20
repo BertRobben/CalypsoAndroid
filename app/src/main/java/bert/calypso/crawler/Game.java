@@ -36,6 +36,11 @@ public class Game {
 
     @Override
     public String toString() {
-        return date.toString() + " " + start + " " + (homeGame ? "CALYPSO - " + opponent : opponent + " - CALYPSO");
+        return date + " " + start + " " + getSetup();
     }
+
+    public String getSetup() {
+        return homeGame ? "CALYPSO - " + opponent : opponent + " - CALYPSO";
+    }
+
 }

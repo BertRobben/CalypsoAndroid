@@ -31,11 +31,11 @@ public class GamesExtractor {
     public List<Game> crawl() throws IOException {
 
         publisher.publish("Connecting to vlmbrabant.be");
-        Response response = Jsoup.connect("https://vlmbrabant.be/indexcomp.htm").method(Connection.Method.GET)
+        Response response = Jsoup.connect("https://vlmbrabant.be/linkscomp.htm").method(Connection.Method.GET)
                 .execute();
         Document doc = response.parse();
 
-        String regioOostUrl = "https://vlmbrabant.be/" + HtmlHelper.findLinkWithImage(doc, "knoppen/regio_oost.jpg");
+        String regioOostUrl = HtmlHelper.findLinkWithImage(doc, "knoppen/regio oost.jpg");
         publisher.publish("Connecting to " + regioOostUrl);
 
         response = Jsoup.connect(regioOostUrl).method(Connection.Method.GET)
@@ -53,14 +53,17 @@ public class GamesExtractor {
         for (Element tr : doc.select("tr")) {
             Elements trs = tr.getElementsByTag("td");
             try {
-                Date date = sdf.parse(trs.get(2).text());
+                Date date = trs.get(2).text().length() > 0 ? sdf.parse(trs.get(2).text()) : null;
                 String home = trs.get(4).text();
                 String out = trs.get(5).text();
                 String startTime = trs.get(3).text();
                 int index = startTime.indexOf(':');
-                SimpleTime start = new SimpleTime(Integer.parseInt(startTime.substring(0, index)), Integer.parseInt(startTime.substring(index + 1)));
+                SimpleTime start = index > 0 ? new SimpleTime(Integer.parseInt(startTime.substring(0, index)), Integer.parseInt(startTime.substring(index + 1))) : null;
                 boolean calypsoGame = home.contains("CALYPSO") || out.contains("CALYPSO");
                 if (!calypsoGame) {
+                    continue;
+                }
+                if ("A".equals(out) || "A".equals(home)) {
                     continue;
                 }
                 boolean homeGame = home.contains("CALYPSO");
@@ -69,6 +72,7 @@ public class GamesExtractor {
                 throw new IllegalArgumentException(e);
             }
         }
+        publisher.publish("Extracted games");
         return result;
     }
 
