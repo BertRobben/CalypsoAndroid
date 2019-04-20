@@ -61,7 +61,7 @@ public class ReservationsExtractor {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .referrer(response.url().toString())
                 .data("gn", "238") // account name Calypso
-                .data("pw1", "XXXXXX")
+                .data("pw1", Credentials.PASSWORD)
                 .data("aanloggen", "Aanloggen")
                 .execute();
 
