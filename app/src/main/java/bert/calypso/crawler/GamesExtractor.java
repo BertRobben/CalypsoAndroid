@@ -67,7 +67,8 @@ public class GamesExtractor {
                     continue;
                 }
                 boolean homeGame = home.contains("CALYPSO");
-                result.add(new Game(date, homeGame ? out : home, start, homeGame));
+                String score = trs.get(6).text();
+                result.add(new Game(date, homeGame ? out : home, start, homeGame, score));
             } catch (ParseException e) {
                 throw new IllegalArgumentException(e);
             }

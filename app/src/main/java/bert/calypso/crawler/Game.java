@@ -10,12 +10,14 @@ public class Game {
     private final String opponent;
     private final SimpleTime start;
     private final boolean homeGame;
+    private final String score;
 
-    public Game(Date date, String opponent, SimpleTime start, boolean homeGame) {
+    public Game(Date date, String opponent, SimpleTime start, boolean homeGame, String score) {
         this.date = date;
         this.opponent = opponent;
         this.start = start;
         this.homeGame = homeGame;
+        this.score = score;
     }
 
     public Date getDate() {
@@ -43,4 +45,7 @@ public class Game {
         return homeGame ? "CALYPSO - " + opponent : opponent + " - CALYPSO";
     }
 
+    public String getScore() {
+        return score;
+    }
 }

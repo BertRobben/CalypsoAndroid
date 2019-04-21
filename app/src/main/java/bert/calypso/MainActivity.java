@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private GameOverviewTask gameOverviewTask;
-    private RecyclerView gamesView;
+    private GamesAdapter gamesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        gamesView = findViewById(R.id.gamesView);
+        RecyclerView gamesView = findViewById(R.id.gamesView);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         gamesView.setLayoutManager(layoutManager);
+        gamesAdapter = new GamesAdapter();
+        gamesView.setAdapter(gamesAdapter);
 
         gameOverviewTask = (GameOverviewTask) getLastCustomNonConfigurationInstance();
         if (gameOverviewTask != null) {
@@ -54,9 +56,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void showGames(List<LocatedGame> games) {
-        Log.i(TAG, "showGames");
-        gamesView.setAdapter(new GamesAdapter(games));
+    public void showGame(LocatedGame game) {
+        gamesAdapter.add(game);
     }
 
     @Override

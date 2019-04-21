@@ -15,34 +15,36 @@ import bert.calypso.crawler.ProgressPublisher;
 import bert.calypso.crawler.Reservation;
 import bert.calypso.crawler.ReservationsExtractor;
 import bert.calypso.crawler.ReservationsExtractor.ReservationExtractor;
+import bert.calypso.util.Either;
 
-public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<LocatedGame>>> {
+public class GameOverviewTask extends AsyncTask<Void, Either<LocatedGame, String>, TaskResult<Void>> {
 
-    private static final String TAG = "Gameoverview";
+    private static final String TAG = "GameOverview";
 
     private MainActivity currentActivity;
     private boolean done;
+    private List<LocatedGame> games = new ArrayList<>();
 
     @Override
-    protected TaskResult<List<LocatedGame>> doInBackground(Void... params) {
+    protected TaskResult<Void> doInBackground(Void... params) {
         GamesExtractor ge = new GamesExtractor(new ProgressPublisher() {
             @Override
             public void publish(String message) {
-                publishProgress(message);
+                publishProgressMessage(message);
             }
         });
         ReservationsExtractor reservationsExtractor = new ReservationsExtractor(new ProgressPublisher() {
             @Override
             public void publish(String message) {
-                publishProgress(message);
+                publishProgressMessage(message);
             }
         });
 
         try {
             ReservationExtractor reservationExtractor = reservationsExtractor.createReservationExtractor();
             List<Game> games = ge.crawl();
-            List<LocatedGame> locatedGames = locate(games, reservationExtractor);
-            return new TaskResult<>(locatedGames);
+            locate(games, reservationExtractor);
+            return new TaskResult<>(null);
         } catch (Exception e) {
             Log.e(TAG, "Failed to extract games", e);
             return new TaskResult(e);
@@ -52,7 +54,7 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
     private List<LocatedGame> locate(List<Game> games, ReservationExtractor reservationExtractor) {
         List<LocatedGame> result = new ArrayList<>();
         for (Game game : games) {
-            result.add(new LocatedGame(game, findLocation(game, reservationExtractor)));
+            publishProgressGame(new LocatedGame(game, findLocation(game, reservationExtractor)));
         }
         return result;
     }
@@ -68,31 +70,43 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
             }
         } catch (IOException e) {
             Log.e(TAG, "Failed to extract date", e);
-            publishProgress("Failed to extract reservation (" + e.getMessage() + ")");
+            publishProgressMessage("Failed to extract reservation (" + e.getMessage() + ")");
         }
         return "";
     }
 
     @Override
-    protected void onProgressUpdate(String... progress) {
+    protected void onProgressUpdate(Either<LocatedGame, String> ... progress) {
         if (currentActivity != null) {
-            TextView tv = currentActivity.findViewById(R.id.status);
-            tv.setText(progress[0]);
+            for (Either<LocatedGame, String> p : progress) {
+                if (p.getLeft() != null) {
+                    currentActivity.showGame(p.getLeft());
+                } else {
+                    TextView tv = currentActivity.findViewById(R.id.status);
+                    tv.setText(p.getRight());
+                }
+            }
         }
     }
 
     @Override
-    protected void onPostExecute(TaskResult<List<LocatedGame>> r) {
+    protected void onPostExecute(TaskResult<Void> r) {
         done = true;
-        onProgressUpdate("");
+        onProgressUpdate(Either.<LocatedGame, String> right(""));
         if (currentActivity != null) {
-            if (r.getResult() != null) {
-                currentActivity.showGames(r.getResult());
-            } else {
+            if (r.getException() != null) {
                 TextView tv = currentActivity.findViewById(R.id.status);
                 tv.setText("Failed to extract results: " + r.getException().getMessage());
             }
         }
+    }
+
+    private void publishProgressMessage(String message) {
+        publishProgress(Either.<LocatedGame, String> right(message));
+    }
+
+    private void publishProgressGame(LocatedGame game) {
+        publishProgress(Either.<LocatedGame, String> left(game));
     }
 
     public boolean isDone() {
@@ -101,7 +115,11 @@ public class GameOverviewTask extends AsyncTask<Void, String, TaskResult<List<Lo
 
     void attach(MainActivity a) {
         currentActivity = a;
+        for (LocatedGame game : games) {
+            currentActivity.showGame(game);
+        }
     }
+
     void detach() {
         currentActivity = null;
     }
